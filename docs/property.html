@@ -25,8 +25,9 @@
 
   <!-- 3-column top row; Tasks full width below -->
   <section class="grid grid-3">
-    <!-- Power / BGAS -->
-    <div class="card">
+
+    <!-- Power / BGAS (MASTER HEIGHT) -->
+    <div class="card" id="card_power">
       <h2>Power / BGAS</h2>
 
       <label for="p_status">Status</label>
@@ -55,20 +56,22 @@
       </div>
     </div>
 
-    <!-- Checklist -->
-    <div class="card">
+    <!-- Checklist (MATCH POWER HEIGHT + SCROLL INSIDE) -->
+    <div class="card card--scroll" id="card_checklist">
       <h2>Checklist</h2>
-      <div id="req" class="stack"></div>
+      <div id="req" class="stack scrollbody"></div>
     </div>
 
-    <!-- Next Actions (NOT full width now) -->
-    <div class="card">
+    <!-- Next Actions (MATCH POWER HEIGHT + SCROLL INSIDE) -->
+    <div class="card card--scroll" id="card_actions">
       <h2>Next Actions</h2>
-      <ul id="actions" class="actions"></ul>
+      <div class="scrollbody">
+        <ul id="actions" class="actions"></ul>
+      </div>
     </div>
 
     <!-- Tasks (FULL WIDTH) -->
-    <div class="card span-all">
+    <div class="card span-all" id="card_tasks">
       <div class="card__head">
         <h2 style="margin:0;">Tasks</h2>
         <span class="small" id="t_msg"></span>
@@ -89,6 +92,7 @@
         </table>
       </div>
     </div>
+
   </section>
 
   <script type="module">
@@ -104,7 +108,7 @@
     const meta  = document.querySelector("#meta");
 
     const reqDiv = document.querySelector("#req");
-    const actionsOl = document.querySelector("#actions");
+    const actionsList = document.querySelector("#actions");
 
     const pStatusSel = document.querySelector("#p_status");
     const pMeterSel  = document.querySelector("#p_meter");
@@ -116,6 +120,28 @@
     const tMsg       = document.querySelector("#t_msg");
     const tasksTbody = document.querySelector("#tasks_table tbody");
 
+    // ------- HEIGHT SYNC (Power is master height) -------
+    function syncTopHeights() {
+      const power = document.querySelector("#card_power");
+      const checklist = document.querySelector("#card_checklist");
+      const actions = document.querySelector("#card_actions");
+      if (!power || !checklist || !actions) return;
+
+      // Clear first so measurement is correct
+      checklist.style.height = "";
+      actions.style.height = "";
+
+      const h = Math.ceil(power.getBoundingClientRect().height);
+
+      checklist.style.height = h + "px";
+      actions.style.height = h + "px";
+    }
+
+    // Observe power card resizing (e.g. fonts, dropdown changes, notes text wrapping)
+    const ro = new ResizeObserver(() => syncTopHeights());
+    ro.observe(document.querySelector("#card_power"));
+    window.addEventListener("resize", syncTopHeights);
+
     // Fill power status dropdown
     pStatusSel.innerHTML = "";
     Object.entries(POWER_STATES).forEach(([k, label]) => {
@@ -125,75 +151,73 @@
       pStatusSel.appendChild(opt);
     });
 
-function prettyLabel(key){
-  return key
-    .replaceAll("_"," ")
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
+    function prettyLabel(key){
+      return key
+        .replaceAll("_"," ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
 
-function renderChecklistFlags(propertyRow) {
-  reqDiv.innerHTML = "";
+    function renderChecklistFlags(propertyRow) {
+      reqDiv.innerHTML = "";
 
-  // 1) Pull only boolean checklist fields
-  const items = Object.entries(propertyRow)
-    .filter(([k,v]) => typeof v === "boolean")
-    .map(([k,v]) => ({
-      key: k,
-      value: v,
-      label: prettyLabel(k)
-    }));
+      const items = Object.entries(propertyRow)
+        .filter(([k,v]) => typeof v === "boolean")
+        .map(([k,v]) => ({ key: k, value: v, label: prettyLabel(k) }));
 
-  // 2) Sort: needed (true) first, not needed (false) last
-  items.sort((a,b) => {
-    if (a.value === b.value) return a.label.localeCompare(b.label);
-    return a.value ? -1 : 1; // true comes first
-  });
+      items.sort((a,b) => {
+        if (a.value === b.value) return a.label.localeCompare(b.label);
+        return a.value ? -1 : 1;
+      });
 
-  const needed = items.filter(x => x.value);
-  const notNeeded = items.filter(x => !x.value);
+      const needed = items.filter(x => x.value);
+      const notNeeded = items.filter(x => !x.value);
 
-  // 3) Render section headers + rows
-  if (needed.length) {
-    const h = document.createElement("div");
-    h.className = "sectionTitle";
-    h.textContent = "Needed";
-    reqDiv.appendChild(h);
+      if (needed.length) {
+        const h = document.createElement("div");
+        h.className = "sectionTitle";
+        h.textContent = "Needed";
+        reqDiv.appendChild(h);
 
-    needed.forEach(x => {
-      const row = document.createElement("div");
-      row.className = "pillrow";
-      row.innerHTML = `
-        <span class="badge ok">Y</span>
-        <span class="pillrow__text">${x.label}</span>
-      `;
-      reqDiv.appendChild(row);
-    });
-  }
+        needed.forEach(x => {
+          const row = document.createElement("div");
+          row.className = "pillrow";
+          row.innerHTML = `
+            <span class="badge ok">Y</span>
+            <span class="pillrow__text">${x.label}</span>
+          `;
+          reqDiv.appendChild(row);
+        });
+      }
 
-  const h2 = document.createElement("div");
-  h2.className = "sectionTitle";
-  h2.textContent = "Not needed";
-  reqDiv.appendChild(h2);
+      const h2 = document.createElement("div");
+      h2.className = "sectionTitle";
+      h2.textContent = "Not needed";
+      reqDiv.appendChild(h2);
 
-  notNeeded.forEach(x => {
-    const row = document.createElement("div");
-    row.className = "pillrow pillrow--dim";
-    row.innerHTML = `
-      <span class="badge">—</span>
-      <span class="pillrow__text">${x.label}</span>
-    `;
-    reqDiv.appendChild(row);
-  });
-}
+      notNeeded.forEach(x => {
+        const row = document.createElement("div");
+        row.className = "pillrow pillrow--dim";
+        row.innerHTML = `
+          <span class="badge">—</span>
+          <span class="pillrow__text">${x.label}</span>
+        `;
+        reqDiv.appendChild(row);
+      });
+
+      // After checklist renders, re-sync heights (scroll area height changes)
+      syncTopHeights();
+    }
 
     function renderNextActions(tasks, powerStatus) {
       const list = nextActions(tasks, powerStatus);
-      actionsOl.innerHTML = "";
+      actionsList.innerHTML = "";
       list.forEach(line => {
         const li = document.createElement("li");
         li.textContent = line;
-        actionsOl.appendChild(li);
+        actionsList.appendChild(li);
       });
+
+      syncTopHeights();
     }
 
     async function ensurePowerRow(propertyRow) {
@@ -326,10 +350,12 @@ function renderChecklistFlags(propertyRow) {
       pTakenChk.checked = !!power.supply_taken_over;
       pNotesArea.value = power.notes || "";
 
+      // after power fields update, sync heights again
+      syncTopHeights();
+
       let tasks = await ensureTasks(prop);
       tasks = applyRules(tasks, power.status);
 
-      // Persist gating results (lightweight)
       for (const t of tasks) {
         if (t.status === "complete") continue;
         await supabase.from("tasks")
@@ -347,6 +373,9 @@ function renderChecklistFlags(propertyRow) {
 
       await renderTasks(tasksFinal || []);
       renderNextActions(tasksFinal || [], power.status);
+
+      // final sync after everything renders
+      syncTopHeights();
     }
 
     pSaveBtn.addEventListener("click", async () => {
