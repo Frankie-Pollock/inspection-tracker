@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header>
+  <strong>Inspection Tracker</strong>
+  <a href="./index.html">Home</a>
+</header>
+
+<main>
+  <div class="card">
+    <h1>Login</h1>
+    <p class="small">Sign in to access properties.</p>
+  </div>
+
+  <form class="card" id="loginForm">
+    <label>Email</label>
+    <input id="email" type="text" placeholder="you@company.com" required />
+
+    <label>Password</label>
+    <input id="password" type="text" placeholder="••••••••" required />
+
+    <hr />
+    <button class="btn" type="submit">Sign In</button>
+    <span class="small" id="msg"></span>
+  </form>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+
+    document.querySelector("#loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.querySelector("#email").value.trim();
+      const password = document.querySelector("#password").value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return document.querySelector("#msg").textContent = error.message;
+
+      window.location.href = "./index.html";
+    });
+  </script>
+</main>
+</body>
+</html>
