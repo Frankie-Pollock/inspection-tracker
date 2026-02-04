@@ -107,10 +107,6 @@ export function nextActions(tasks, powerStatus) {
   // Add the top items
   open.slice(0, 10).forEach(t => actions.push(`• ${t.name}`));
 
-  // Helpful tip (only once, and only if relevant)
-  if (!powerReady) {
-    actions.push("Tip: while power is not ready, do surveys/drawings that don’t require power.");
-  }
 
   // If nothing left
   const remaining = tasks.filter(t => t.status !== "complete");
