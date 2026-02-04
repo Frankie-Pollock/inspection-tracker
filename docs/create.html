@@ -63,42 +63,41 @@
   </form>
 
   <script type="module">
-    import { requireAuth } from "./js/authGate.js";
-    await requireAuth();
-    
-    import { addProperty, makeId } from "./js/app.js";
 
-    const form = document.querySelector("#form");
-    const msg = document.querySelector("#msg");
+import { supabase } from "./js/supabaseClient.js";
+import { requireAuth } from "./js/authGate.js";
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+await requireAuth();
 
-      const property = {
-        id: makeId(),
-        address: document.querySelector("#address").value.trim(),
-        powerStatus: document.querySelector("#powerStatus").value,
-        requirements: {
-          isolator_required: document.querySelector("#isolator_required").checked,
-          power_issues: document.querySelector("#power_issues").checked,
-          asbestos_survey: document.querySelector("#asbestos_survey").checked,
-          asbestos_removal: document.querySelector("#asbestos_removal").checked,
-          altro_flooring: document.querySelector("#altro_flooring").checked,
-          heating_referral: document.querySelector("#heating_referral").checked,
-          rot_works: document.querySelector("#rot_works").checked,
-          bathroom_renewal: document.querySelector("#bathroom_renewal").checked,
-          epc: document.querySelector("#epc").checked,
-          paint_lines: document.querySelector("#paint_lines").checked,
-          glazier: document.querySelector("#glazier").checked,
-          kitchen_renewal: document.querySelector("#kitchen_renewal").checked
-        },
-        createdAt: new Date().toISOString()
-      };
+document.querySelector("#form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      addProperty(property);
-      msg.textContent = " Saved! Redirecting...";
-      setTimeout(() => window.location.href = "./properties.html", 700);
-    });
+  const payload = {
+    address: document.querySelector("#address").value.trim(),
+    isolator_required: document.querySelector("#isolator_required").checked,
+    power_issues: document.querySelector("#power_issues").checked,
+    asbestos_survey: document.querySelector("#asbestos_survey").checked,
+    asbestos_removal: document.querySelector("#asbestos_removal").checked,
+    altro_flooring: document.querySelector("#altro_flooring").checked,
+    heating_referral: document.querySelector("#heating_referral").checked,
+    rot_works: document.querySelector("#rot_works").checked,
+    bathroom_renewal: document.querySelector("#bathroom_renewal").checked,
+    epc: document.querySelector("#epc").checked,
+    paint_lines: document.querySelector("#paint_lines").checked,
+    glazier: document.querySelector("#glazier").checked,
+    kitchen_renewal: document.querySelector("#kitchen_renewal").checked,
+    power_status: document.querySelector("#powerStatus").value
+  };
+
+  const { error } = await supabase.from("properties").insert(payload);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+  window.location.href = "./properties.html";
+});
+
   </script>
 </main>
 </body>
