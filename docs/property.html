@@ -11,15 +11,11 @@
 <header>
   <strong>Inspection Tracker</strong>
   <a href="./index.html">Home</a>
- e.htmlCreate</a>
+  <a href="./properties.html">Properties</a>
+  <a href="./create.html">Create</a>
 </header>
 
 <main>
-  <script type="module">
-    import { requireAuth } from "./js/authGate.js";
-    await requireAuth();
-  </script>
-
   <div class="card">
     <h1 id="title">Property</h1>
     <p class="small" id="meta"></p>
@@ -40,54 +36,41 @@
   <script type="module">
     import { supabase } from "./js/supabaseClient.js";
     import { requireAuth } from "./js/authGate.js";
-    import { computeNextActions } from "./js/app.js";
+    import { POWER_STATES, buildTaskSeed, applyRules, nextActions } from "./js/workflow.js";
 
     await requireAuth();
 
     const id = new URLSearchParams(location.search).get("id");
 
-    const { data, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      document.querySelector("#title").textContent = "Not found";
-      document.querySelector("#meta").textContent = error.message;
-      throw error;
-    }
-
-    const p = data;
-
-    document.querySelector("#title").textContent = p.address;
-    document.querySelector("#meta").textContent =
-      `Power: ${p.power_status} • Created: ${new Date(p.created_at).toLocaleString()}`;
-
-    // Render checklist
+    const title = document.querySelector("#title");
+    const meta = document.querySelector("#meta");
     const reqDiv = document.querySelector("#req");
-    for (const [key, value] of Object.entries(p)) {
-      if (typeof value === "boolean") {
-        const div = document.createElement("div");
-        div.className = "chk";
-        div.innerHTML = `<span class="badge">${value ? "Yes" : "No"}</span> ${key}`;
-        reqDiv.appendChild(div);
-      }
-    }
+    const actionsOl = document.querySelector("#actions");
+    const grid = document.querySelector(".grid");
 
-    // Render next actions (placeholder logic for now)
-    const actions = computeNextActions({
-      powerStatus: p.power_status,
-      requirements: p
-    });
+    // --- Inject Power / BGAS card (NO account number) ---
+    const powerCard = document.createElement("div");
+    powerCard.className = "card";
+    powerCard.innerHTML = `
+      <h2>Power / BGAS</h2>
 
-    const ol = document.querySelector("#actions");
-    actions.forEach(a => {
-      const li = document.createElement("li");
-      li.textContent = a;
-      ol.appendChild(li);
-    });
-  </script>
-</main>
-</body>
-</html>
+      <label>Status</label>
+      <select id="p_status"></select>
+
+      <label>Meter Type (optional)</label>
+      <select id="p_meter">
+        <option value="">—</option>
+        <option value="credit">Credit</option>
+        <option value="payg">PAYG</option>
+        <option value="rti_keymeter">RTI KEYMETER</option>
+        <option value="e10">E10</option>
+      </select>
+
+      <div class="chk">
+        <input type="checkbox" id="p_taken" />
+        <label>Supply taken over (E10)</label>
+      </div>
+
+      <label>Notes</label>
+      <input id="p_notes" type="text" placeholder="e.g. Awaiting meter type from BGAS (date)" />
+
