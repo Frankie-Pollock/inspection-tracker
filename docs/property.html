@@ -1,1 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Property</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+<header>
+  <strong>Inspection Tracker</strong>
+  <a href="./index.html">Home</a>
+  <a href="./properties.html">Properties</a>
+  <a href="./create.html">Create</a>
+</header>
 
+<main>
+  <div class="card">
+    <h1 id="title">Property</h1>
+    <p class="small" id="meta"></p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Requirements</h2>
+      <div id="req"></div>
+    </div>
+
+    <div class="card">
+      <h2>Next Actions (placeholder)</h2>
+      <ol id="actions"></ol>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getPropertyById, computeNextActions } from "./js/app.js";
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    const p = getPropertyById(id);
+
+    if (!p) {
+      document.querySelector("#title").textContent = "Property not found";
+      document.querySelector("#meta").textContent = "Go back to Properties.";
+      throw new Error("Not found");
+    }
+
+    document.querySelector("#title").textContent = p.address;
+    document.querySelector("#meta").textContent = `Power: ${p.powerStatus} • Created: ${new Date(p.createdAt).toLocaleString()} • ID: ${p.id}`;
+
+    const reqDiv = document.querySelector("#req");
+    const req = p.requirements;
+    Object.keys(req).forEach(k => {
+      const row = document.createElement("div");
+      row.className = "chk";
+      row.innerHTML = `<span class="badge ${req[k] ? "ok" : ""}">${req[k] ? "Y" : "—"}</span> <span>${k.replaceAll("_"," ")}</span>`;
+      reqDiv.appendChild(row);
+    });
+
+    const actions = computeNextActions(p);
+    const ol = document.querySelector("#actions");
+    actions.forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = a;
+      ol.appendChild(li);
+    });
+  </script>
+</main>
+</body>
+</html>
