@@ -72,18 +72,40 @@ export function applyRules(tasks, powerStatus) {
 
 export function nextActions(tasks, powerStatus) {
   const actions = [];
-  actions.push("1) Paperwork & PO’s");
-  actions.push("2) Check BGAS / Power status");
 
-  const powerReady = powerStatus === "power_ready" || powerStatus === "e10_supply_taken_over";
+  const byKey = Object.fromEntries(tasks.map(t => [t.key, t]));
 
+  const paperworkDone = byKey.paperwork_pos?.status === "complete";
+  const bgasDone = byKey.bgas_check?.status === "complete";
+
+  // Only suggest these if not complete
+  if (!paperworkDone) actions.push("1) Paperwork & PO’s");
+  if (!bgasDone) actions.push(`${paperworkDone ? "1" : "2"}) Check BGAS / Power status`);
+
+  const powerReady = powerStatus === "power_ready";
+
+  // Show remaining actionable tasks (not complete, not blocked)
   const open = tasks.filter(t => t.status !== "complete" && t.status !== "blocked");
-  open.sort((a, b) => (a.requires_power === b.requires_power) ? 0 : (a.requires_power ? 1 : -1));
 
+  // Sort: non-power first if power not ready
+  open.sort((a, b) => {
+    if (a.requires_power === b.requires_power) return 0;
+    return a.requires_power ? 1 : -1;
+  });
+
+  // If power is NOT ready, add a helpful tip once
+  if (!powerReady) {
+    actions.push("Tip: while power is not ready, do surveys/drawings that don’t require power.");
+  }
+
+  // Add top next tasks
   open.slice(0, 8).forEach(t => actions.push(`• ${t.name}`));
 
-  if (!powerReady) actions.push("Tip: while power is not ready, do surveys/drawings that don’t require power.");
+  // If everything is done, make that obvious
+  const remaining = tasks.filter(t => t.status !== "complete");
+  if (!remaining.length) actions.push("All tasks complete ✅");
 
   return actions;
 }
+
 ``
