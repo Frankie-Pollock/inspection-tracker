@@ -3,52 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login</title>
+  <title>Inspection Tracker</title>
   <link rel="stylesheet" href="./css/styles.css">
 </head>
 
 <body>
 <header>
   <strong>Inspection Tracker</strong>
-  <a href="./login.html">Login</a>
+  <a href="./index.html">Home</a>
+  <a href="./properties.html">Properties</a>
+  <a href="./create.html">Create</a>
 </header>
 
 <main>
+  <script type="module">
+    import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
+  </script>
+
   <div class="card">
-    <h1>Login</h1>
-    <p class="small">Use your work email + shared password.</p>
+    <h1>Welcome</h1>
+    <p class="small">Choose an option below.</p>
   </div>
 
-  <form class="card" id="loginForm">
-    <label>Email</label>
-    <input id="email" type="text" required>
+  <div class="grid">
+    <div class="card">
+      <h2>View Properties</h2>
+      <p class="small">See all shared inspection data.</p>
+      <a class="btn" href="./properties.html">View</a>
+    </div>
 
-    <label>Password</label>
-    <input id="password" type="password" required>
-
-    <hr />
-    <button class="btn" type="submit">Sign In</button>
-    <span id="msg" class="small"></span>
-  </form>
-
-  <script type="module">
-    import { supabase } from "./js/supabaseClient.js";
-
-    document.querySelector("#loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const email = document.querySelector("#email").value.trim();
-      const password = document.querySelector("#password").value;
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        document.querySelector("#msg").textContent = error.message;
-        return;
-      }
-
-      window.location.href = "./index.html";
-    });
-  </script>
+    <div class="card">
+      <h2>Create Property</h2>
+      <p class="small">Add a new property + checklist.</p>
+      <a class="btn" href="./create.html">Create</a>
+    </div>
+  </div>
 </main>
 </body>
 </html>
