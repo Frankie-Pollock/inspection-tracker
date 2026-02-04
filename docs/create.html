@@ -4,102 +4,104 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Create Property</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
+
 <body>
-<header>
-  <strong>Inspection Tracker</strong>
-  <a href="./index.html">Home</a>
-  <a href="./properties.html">Properties</a>
-  <a href="./create.html">Create</a>
+<header/strong>
+  ./index.htmlHome</a>
+  ./properties.htmlProperties</a>
+  ./create.htmlCreate</a>
 </header>
 
 <main>
+  <script type="module">
+    import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
+  </script>
+
   <div class="card">
     <h1>Create Property</h1>
-    <p class="small">MVP: manual ticks only. We’ll add upload/parsing and Supabase later.</p>
+    <p class="small">Manual checklist for now; upload later.</p>
   </div>
 
-  <form id="form" class="card">
+  <form class="card" id="form">
     <label>Address</label>
-    <input id="address" type="text" placeholder="e.g. 12 Example Street, Falkirk" required />
+    <input id="address" type="text" required />
 
     <hr />
 
     <fieldset>
-      <legend>Checklist Requirements</legend>
+      <legend>Checklist</legend>
 
-      <div class="chk"><input type="checkbox" id="isolator_required"> <label for="isolator_required">Isolator Required</label></div>
-      <div class="chk"><input type="checkbox" id="power_issues"> <label for="power_issues">Power Issues</label></div>
-      <div class="chk"><input type="checkbox" id="asbestos_survey"> <label for="asbestos_survey">Asbestos Survey</label></div>
-      <div class="chk"><input type="checkbox" id="asbestos_removal"> <label for="asbestos_removal">Asbestos Removal</label></div>
-      <div class="chk"><input type="checkbox" id="altro_flooring"> <label for="altro_flooring">Altro Flooring</label></div>
-      <div class="chk"><input type="checkbox" id="heating_referral"> <label for="heating_referral">Heating Referral</label></div>
-      <div class="chk"><input type="checkbox" id="rot_works"> <label for="rot_works">Rot Works</label></div>
-      <div class="chk"><input type="checkbox" id="bathroom_renewal"> <label for="bathroom_renewal">Bathroom Renewal</label></div>
-      <div class="chk"><input type="checkbox" id="epc"> <label for="epc">EPC</label></div>
-      <div class="chk"><input type="checkbox" id="paint_lines"> <label for="paint_lines">Paint Lines</label></div>
-      <div class="chk"><input type="checkbox" id="glazier"> <label for="glazier">Glazier</label></div>
-      <div class="chk"><input type="checkbox" id="kitchen_renewal"> <label for="kitchen_renewal">Kitchen Renewal</label></div>
+      <div class="chk"><input id="isolator_required" type="checkbox"> <label>Isolator Required</label></div>
+      <div class="chk"><input id="power_issues" type="checkbox"> <label>Power Issues</label></div>
+      <div class="chk"><input id="asbestos_survey" type="checkbox"> <label>Asbestos Survey</label></div>
+      <div class="chk"><input id="asbestos_removal" type="checkbox"> <label>Asbestos Removal</label></div>
+      <div class="chk"><input id="altro_flooring" type="checkbox"> <label>Altro Flooring</label></div>
+      <div class="chk"><input id="heating_referral" type="checkbox"> <label>Heating Referral</label></div>
+      <div class="chk"><input id="rot_works" type="checkbox"> <label>Rot Works</label></div>
+      <div class="chk"><input id="bathroom_renewal" type="checkbox"> <label>Bathroom Renewal</label></div>
+      <div class="chk"><input id="epc" type="checkbox"> <label>EPC</label></div>
+      <div class="chk"><input id="paint_lines" type="checkbox"> <label>Paint Lines</label></div>
+      <div class="chk"><input id="glazier" type="checkbox"> <label>Glazier</label></div>
+      <div class="chk"><input id="kitchen_renewal" type="checkbox"> <label>Kitchen Renewal</label></div>
     </fieldset>
 
     <hr />
 
     <fieldset>
-      <legend>Power Status (placeholder)</legend>
-      <p class="small">For now just pick a status. Later we’ll build your BGAS state machine screens.</p>
+      <legend>Power Status</legend>
       <select id="powerStatus">
         <option value="not_checked">Not checked</option>
         <option value="awaiting_meter_type">Awaiting meter type</option>
         <option value="meter_type_given">Meter type given</option>
-        <option value="e10_needs_taken_over">E10: needs to be taken over</option>
+        <option value="e10_needs_taken_over">E10: Needs takeover</option>
         <option value="power_ready">Power ready</option>
       </select>
     </fieldset>
 
     <hr />
-    <button class="btn" type="submit">Save Property (local)</button>
+    <button class="btn" type="submit">Save Property</button>
     <span class="small" id="msg"></span>
   </form>
 
   <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+    import { requireAuth } from "./js/authGate.js";
 
-import { supabase } from "./js/supabaseClient.js";
-import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
 
-await requireAuth();
+    document.querySelector("#form").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-document.querySelector("#form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+      const payload = {
+        address: document.querySelector("#address").value.trim(),
+        isolator_required: isolator_required.checked,
+        power_issues: power_issues.checked,
+        asbestos_survey: asbestos_survey.checked,
+        asbestos_removal: asbestos_removal.checked,
+        altro_flooring: altro_flooring.checked,
+        heating_referral: heating_referral.checked,
+        rot_works: rot_works.checked,
+        bathroom_renewal: bathroom_renewal.checked,
+        epc: epc.checked,
+        paint_lines: paint_lines.checked,
+        glazier: glazier.checked,
+        kitchen_renewal: kitchen_renewal.checked,
+        power_status: powerStatus.value
+      };
 
-  const payload = {
-    address: document.querySelector("#address").value.trim(),
-    isolator_required: document.querySelector("#isolator_required").checked,
-    power_issues: document.querySelector("#power_issues").checked,
-    asbestos_survey: document.querySelector("#asbestos_survey").checked,
-    asbestos_removal: document.querySelector("#asbestos_removal").checked,
-    altro_flooring: document.querySelector("#altro_flooring").checked,
-    heating_referral: document.querySelector("#heating_referral").checked,
-    rot_works: document.querySelector("#rot_works").checked,
-    bathroom_renewal: document.querySelector("#bathroom_renewal").checked,
-    epc: document.querySelector("#epc").checked,
-    paint_lines: document.querySelector("#paint_lines").checked,
-    glazier: document.querySelector("#glazier").checked,
-    kitchen_renewal: document.querySelector("#kitchen_renewal").checked,
-    power_status: document.querySelector("#powerStatus").value
-  };
+      const { error } = await supabase.from("properties").insert(payload);
 
-  const { error } = await supabase.from("properties").insert(payload);
+      if (error) {
+        msg.textContent = error.message;
+        return;
+      }
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-  window.location.href = "./properties.html";
-});
-
+      window.location.href = "./properties.html";
+    });
   </script>
 </main>
 </body>
 </html>
-
