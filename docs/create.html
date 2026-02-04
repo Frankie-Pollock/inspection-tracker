@@ -68,42 +68,68 @@
     <span class="small" id="msg"></span>
   </form>
 
-  <script type="module">
-    import { supabase } from "./js/supabaseClient.js";
-    import { requireAuth } from "./js/authGate.js";
+<script type="module">
+  import { supabase } from "./js/supabaseClient.js";
+  import { requireAuth } from "./js/authGate.js";
+  import { buildTaskSeed } from "./js/workflow.js";
 
-    await requireAuth();
+  await requireAuth();
 
-    document.querySelector("#form").addEventListener("submit", async (e) => {
-      e.preventDefault();
+  const form = document.querySelector("#form");
+  const msg = document.querySelector("#msg");
 
-      const payload = {
-        address: document.querySelector("#address").value.trim(),
-        isolator_required: isolator_required.checked,
-        power_issues: power_issues.checked,
-        asbestos_survey: asbestos_survey.checked,
-        asbestos_removal: asbestos_removal.checked,
-        altro_flooring: altro_flooring.checked,
-        heating_referral: heating_referral.checked,
-        rot_works: rot_works.checked,
-        bathroom_renewal: bathroom_renewal.checked,
-        epc: epc.checked,
-        paint_lines: paint_lines.checked,
-        glazier: glazier.checked,
-        kitchen_renewal: kitchen_renewal.checked,
-        power_status: powerStatus.value
-      };
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
 
-      const { error } = await supabase.from("properties").insert(payload);
+    const payload = {
+      address: document.querySelector("#address").value.trim(),
+      isolator_required: isolator_required.checked,
+      power_issues: power_issues.checked,
+      asbestos_survey: asbestos_survey.checked,
+      asbestos_removal: asbestos_removal.checked,
+      altro_flooring: altro_flooring.checked,
+      heating_referral: heating_referral.checked,
+      rot_works: rot_works.checked,
+      bathroom_renewal: bathroom_renewal.checked,
+      epc: epc.checked,
+      paint_lines: paint_lines.checked,
+      glazier: glazier.checked,
+      kitchen_renewal: kitchen_renewal.checked,
+      power_status: powerStatus.value
+    };
 
-      if (error) {
-        msg.textContent = error.message;
-        return;
-      }
+    const { data: inserted, error: insErr } = await supabase
+      .from("properties")
+      .insert(payload)
+      .select("*")
+      .single();
 
-      window.location.href = "./properties.html";
-    });
-  </script>
+    if (insErr) { msg.textContent = insErr.message; return; }
+
+    // power_status row (no account number)
+    const { error: pErr } = await supabase
+      .from("power_status")
+      .insert({ property_id: inserted.id, status: inserted.power_status });
+
+    if (pErr) { msg.textContent = pErr.message; return; }
+
+    // tasks seed
+    const seeds = buildTaskSeed(inserted).map(t => ({
+      property_id: inserted.id,
+      key: t.key,
+      name: t.name,
+      requires_power: t.requires_power
+    }));
+
+    if (seeds.length) {
+      const { error: tErr } = await supabase.from("tasks").insert(seeds);
+      if (tErr) { msg.textContent = tErr.message; return; }
+    }
+
+    window.location.href = "./properties.html";
+  });
+</script>
 </main>
 </body>
 </html>
