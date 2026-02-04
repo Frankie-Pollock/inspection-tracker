@@ -73,37 +73,48 @@ export function applyRules(tasks, powerStatus) {
 export function nextActions(tasks, powerStatus) {
   const actions = [];
 
-  const byKey = Object.fromEntries(tasks.map(t => [t.key, t]));
-
-  const paperworkDone = byKey.paperwork_pos?.status === "complete";
-  const bgasDone = byKey.bgas_check?.status === "complete";
-
-  // Only suggest these if not complete
-  if (!paperworkDone) actions.push("1) Paperwork & PO’s");
-  if (!bgasDone) actions.push(`${paperworkDone ? "1" : "2"}) Check BGAS / Power status`);
-
+  // Power ready only when status is POWER READY
   const powerReady = powerStatus === "power_ready";
 
-  // Show remaining actionable tasks (not complete, not blocked)
-  const open = tasks.filter(t => t.status !== "complete" && t.status !== "blocked");
+  // We will order tasks by priority so "paperwork" and "bgas" always appear at the top.
+  // IMPORTANT: use NAME matching too, so it works even if keys differ in your DB.
+  const priorityMatchers = [
+    (t) => t.key === "paperwork_pos" || /paperwork/i.test(t.name),
+    (t) => t.key === "bgas_check" || /bgas/i.test(t.name),
+  ];
 
-  // Sort: non-power first if power not ready
+  const isOpen = (t) => t.status !== "complete" && t.status !== "blocked";
+
+  const open = tasks.filter(isOpen);
+
+  // Sort: first priority tasks, then non-power tasks (if power not ready), then everything else
   open.sort((a, b) => {
-    if (a.requires_power === b.requires_power) return 0;
-    return a.requires_power ? 1 : -1;
+    const pa = priorityMatchers.findIndex(fn => fn(a));
+    const pb = priorityMatchers.findIndex(fn => fn(b));
+
+    const aPri = pa === -1 ? 999 : pa;
+    const bPri = pb === -1 ? 999 : pb;
+    if (aPri !== bPri) return aPri - bPri;
+
+    // If power not ready, prefer tasks that don't require power
+    if (!powerReady && a.requires_power !== b.requires_power) {
+      return a.requires_power ? 1 : -1;
+    }
+
+    return 0;
   });
 
-  // If power is NOT ready, add a helpful tip once
+  // Add the top items
+  open.slice(0, 10).forEach(t => actions.push(`• ${t.name}`));
+
+  // Helpful tip (only once, and only if relevant)
   if (!powerReady) {
     actions.push("Tip: while power is not ready, do surveys/drawings that don’t require power.");
   }
 
-  // Add top next tasks
-  open.slice(0, 8).forEach(t => actions.push(`• ${t.name}`));
-
-  // If everything is done, make that obvious
+  // If nothing left
   const remaining = tasks.filter(t => t.status !== "complete");
-  if (!remaining.length) actions.push("All tasks complete ✅");
+  if (remaining.length === 0) actions.unshift("All tasks complete ✅");
 
   return actions;
 }
