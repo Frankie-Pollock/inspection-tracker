@@ -74,3 +74,267 @@
       <label>Notes</label>
       <input id="p_notes" type="text" placeholder="e.g. Awaiting meter type from BGAS (date)" />
 
+      <hr />
+      <button class="btn" id="p_save">Save Power Status</button>
+      <span class="small" id="p_msg"></span>
+    `;
+
+    // --- Inject Tasks card ---
+    const tasksCard = document.createElement("div");
+    tasksCard.className = "card";
+    tasksCard.innerHTML = `
+      <h2>Tasks</h2>
+      <table class="table" id="tasks_table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Requires Power</th>
+            <th>Completed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p class="small" id="t_msg"></p>
+    `;
+
+    // Put new cards into grid (Power first, Tasks last)
+    grid.prepend(powerCard);
+    grid.appendChild(tasksCard);
+
+    // Fill power status options
+    const pStatusSel = powerCard.querySelector("#p_status");
+    Object.entries(POWER_STATES).forEach(([k, label]) => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = label;
+      pStatusSel.appendChild(opt);
+    });
+
+    async function ensurePowerRow(propertyRow) {
+      // Try to load power_status
+      const { data, error } = await supabase
+        .from("power_status")
+        .select("*")
+        .eq("property_id", propertyRow.id)
+        .maybeSingle();
+
+      // If row exists, return it
+      if (data) return data;
+
+      // If not exists, create default row
+      const { data: created, error: insErr } = await supabase
+        .from("power_status")
+        .insert({ property_id: propertyRow.id, status: propertyRow.power_status })
+        .select("*")
+        .single();
+
+      if (insErr) throw insErr;
+      return created;
+    }
+
+    async function ensureTasks(propertyRow) {
+      const { data: tasks, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("property_id", propertyRow.id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      // If tasks already exist, return them
+      if (tasks && tasks.length) return tasks;
+
+      // Otherwise seed tasks from checklist flags
+      const seeds = buildTaskSeed(propertyRow).map(t => ({
+        property_id: propertyRow.id,
+        key: t.key,
+        name: t.name,
+        requires_power: t.requires_power
+      }));
+
+      if (seeds.length) {
+        const { error: insErr } = await supabase.from("tasks").insert(seeds);
+        if (insErr) throw insErr;
+      }
+
+      // Reload tasks after seeding
+      const { data: tasks2, error: err2 } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("property_id", propertyRow.id)
+        .order("created_at", { ascending: true });
+
+      if (err2) throw err2;
+      return tasks2 || [];
+    }
+
+    function renderChecklistFlags(propertyRow) {
+      reqDiv.innerHTML = "";
+      for (const [key, value] of Object.entries(propertyRow)) {
+        if (typeof value === "boolean") {
+          const div = document.createElement("div");
+          div.className = "chk";
+          div.innerHTML = `<span class="badge ${value ? "ok" : ""}">${value ? "Y" : "—"}</span> ${key.replaceAll("_"," ")}`;
+          reqDiv.appendChild(div);
+        }
+      }
+    }
+
+    function renderNextActions(tasks, powerStatus) {
+      const actions = nextActions(tasks, powerStatus);
+      actionsOl.innerHTML = "";
+      actions.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = a;
+        actionsOl.appendChild(li);
+      });
+    }
+
+    async function renderTasks(tasks) {
+      const tbody = tasksCard.querySelector("#tasks_table tbody");
+      tbody.innerHTML = "";
+
+      tasks.forEach(t => {
+        const tr = document.createElement("tr");
+
+        const statusBadge =
+          t.status === "complete"
+            ? `<span class="badge ok">complete</span>`
+            : t.status === "blocked"
+              ? `<span class="badge blocked">blocked</span>`
+              : `<span class="badge">${t.status}</span>`;
+
+        tr.innerHTML = `
+          <td>
+            <strong>${t.name}</strong>
+            ${t.blocked_reason ? `<div class="small">${t.blocked_reason}</div>` : ""}
+          </td>
+          <td>${statusBadge}</td>
+          <td>${t.requires_power ? "Yes" : "No"}</td>
+          <td>${t.completed_at ? new Date(t.completed_at).toLocaleString() : ""}</td>
+          <td>
+            <button class="btn" data-action="toggle" data-id="${t.id}">
+              ${t.status === "complete" ? "Mark not complete" : "Mark complete"}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Toggle completion
+      tbody.querySelectorAll('button[data-action="toggle"]').forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const taskId = btn.getAttribute("data-id");
+          const task = tasks.find(x => x.id === taskId);
+          if (!task) return;
+
+          const makeComplete = task.status !== "complete";
+
+          const { error } = await supabase
+            .from("tasks")
+            .update({
+              status: makeComplete ? "complete" : "not_started",
+              completed_at: makeComplete ? new Date().toISOString() : null,
+              blocked_reason: null
+            })
+            .eq("id", taskId);
+
+          if (error) alert(error.message);
+          await loadAll();
+        });
+      });
+    }
+
+    async function loadAll() {
+      // 1) Load the property
+      const { data: prop, error: propErr } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (propErr) {
+        title.textContent = "Not found";
+        meta.textContent = propErr.message;
+        throw propErr;
+      }
+
+      title.textContent = prop.address;
+      meta.textContent = `Power: ${prop.power_status} • Created: ${new Date(prop.created_at).toLocaleString()}`;
+
+      renderChecklistFlags(prop);
+
+      // 2) Ensure power_status row exists
+      const power = await ensurePowerRow(prop);
+
+      // Fill power UI
+      powerCard.querySelector("#p_status").value = power.status || "not_checked";
+      powerCard.querySelector("#p_meter").value = power.meter_type || "";
+      powerCard.querySelector("#p_taken").checked = !!power.supply_taken_over;
+      powerCard.querySelector("#p_notes").value = power.notes || "";
+
+      // 3) Ensure tasks exist
+      let tasks = await ensureTasks(prop);
+
+      // 4) Apply gating rules locally, then persist changes (blocked/unblocked reasons)
+      tasks = applyRules(tasks, power.status);
+
+      // Persist status/blocked_reason for non-complete tasks (keeps DB consistent)
+      for (const t of tasks) {
+        if (t.status === "complete") continue;
+        await supabase
+          .from("tasks")
+          .update({ status: t.status, blocked_reason: t.blocked_reason })
+          .eq("id", t.id);
+      }
+
+      // Reload tasks after applying rule updates
+      const { data: tasksFinal, error: tErr } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("property_id", prop.id)
+        .order("created_at", { ascending: true });
+
+      if (tErr) throw tErr;
+
+      await renderTasks(tasksFinal || []);
+      renderNextActions(tasksFinal || [], power.status);
+    }
+
+    // Save power status
+    powerCard.querySelector("#p_save").addEventListener("click", async () => {
+      const p_msg = powerCard.querySelector("#p_msg");
+      p_msg.textContent = "";
+
+      const status = powerCard.querySelector("#p_status").value;
+      const meter_type = powerCard.querySelector("#p_meter").value || null;
+      const supply_taken_over = powerCard.querySelector("#p_taken").checked;
+      const notes = powerCard.querySelector("#p_notes").value.trim() || null;
+
+      // Update power_status (no account number)
+      const { error: pErr } = await supabase
+        .from("power_status")
+        .update({ status, meter_type, supply_taken_over, notes })
+        .eq("property_id", id);
+
+      if (pErr) { p_msg.textContent = pErr.message; return; }
+
+      // Mirror for list views
+      const { error: propErr } = await supabase
+        .from("properties")
+        .update({ power_status: status })
+        .eq("id", id);
+
+      if (propErr) { p_msg.textContent = propErr.message; return; }
+
+      p_msg.textContent = "Saved.";
+      await loadAll();
+    });
+
+    await loadAll();
+  </script>
+</main>
+</body>
+</html>
