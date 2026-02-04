@@ -284,3 +284,31 @@ input:focus, select:focus, textarea:focus{
 }
 
 .taskname{ font-weight: 800; margin-bottom: 4px; }
+
+/* Make all cards in the grid row match height */
+.grid {
+  align-items: stretch; /* IMPORTANT: cards become equal height in a row */
+}
+
+/* Ensure cards behave nicely as vertical layouts */
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Checklist container: scroll within the card if content is taller */
+#req.stack {
+  flex: 1;              /* take remaining height */
+  overflow: auto;       /* scroll if too tall */
+  padding-right: 6px;   /* space for scrollbar */
+}
+
+/* Optional: nicer scrollbar (works in Chromium/Edge) */
+#req.stack::-webkit-scrollbar { width: 10px; }
+#req.stack::-webkit-scrollbar-thumb {
+  background: rgba(159,176,208,.25);
+  border-radius: 999px;
+}
+#req.stack::-webkit-scrollbar-thumb:hover {
+  background: rgba(159,176,208,.35);
+}
