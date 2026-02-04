@@ -37,17 +37,25 @@
   </div>
 
   <script type="module">
-    import { getPropertyById, computeNextActions } from "./js/app.js";
+import { supabase } from "./js/supabaseClient.js";
+import { requireAuth } from "./js/authGate.js";
 
-    const params = new URLSearchParams(location.search);
-    const id = params.get("id");
-    const p = getPropertyById(id);
+await requireAuth();
 
-    if (!p) {
-      document.querySelector("#title").textContent = "Property not found";
-      document.querySelector("#meta").textContent = "Go back to Properties.";
-      throw new Error("Not found");
-    }
+const id = new URLSearchParams(location.search).get("id");
+
+const { data, error } = await supabase
+  .from("properties")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+if (error) {
+  alert(error.message);
+  throw error;
+}
+
+// use `data` to render requirements/actions
 
     document.querySelector("#title").textContent = p.address;
     document.querySelector("#meta").textContent = `Power: ${p.powerStatus} • Created: ${new Date(p.createdAt).toLocaleString()} • ID: ${p.id}`;
