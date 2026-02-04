@@ -6,28 +6,29 @@
   <title>Login</title>
   <link rel="stylesheet" href="./css/styles.css">
 </head>
+
 <body>
 <header>
   <strong>Inspection Tracker</strong>
-  <a href="./index.html">Home</a>
+  <a href="./login.html">Login</a>
 </header>
 
 <main>
   <div class="card">
     <h1>Login</h1>
-    <p class="small">Sign in to access properties.</p>
+    <p class="small">Use your work email + shared password.</p>
   </div>
 
   <form class="card" id="loginForm">
     <label>Email</label>
-    <input id="email" type="text" placeholder="you@company.com" required />
+    <input id="email" type="text" required>
 
     <label>Password</label>
-    <input id="password" type="text" placeholder="••••••••" required />
+    <input id="password" type="password" required>
 
     <hr />
     <button class="btn" type="submit">Sign In</button>
-    <span class="small" id="msg"></span>
+    <span id="msg" class="small"></span>
   </form>
 
   <script type="module">
@@ -35,11 +36,15 @@
 
     document.querySelector("#loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const email = document.querySelector("#email").value.trim();
       const password = document.querySelector("#password").value;
 
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return document.querySelector("#msg").textContent = error.message;
+      if (error) {
+        document.querySelector("#msg").textContent = error.message;
+        return;
+      }
 
       window.location.href = "./index.html";
     });
