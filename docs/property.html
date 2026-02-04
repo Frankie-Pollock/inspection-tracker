@@ -125,20 +125,66 @@
       pStatusSel.appendChild(opt);
     });
 
-    function renderChecklistFlags(propertyRow) {
-      reqDiv.innerHTML = "";
-      for (const [key, value] of Object.entries(propertyRow)) {
-        if (typeof value === "boolean") {
-          const row = document.createElement("div");
-          row.className = "pillrow";
-          row.innerHTML = `
-            <span class="badge ${value ? "ok" : ""}">${value ? "Y" : "—"}</span>
-            <span class="pillrow__text">${key.replaceAll("_"," ")}</span>
-          `;
-          reqDiv.appendChild(row);
-        }
-      }
-    }
+function prettyLabel(key){
+  return key
+    .replaceAll("_"," ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function renderChecklistFlags(propertyRow) {
+  reqDiv.innerHTML = "";
+
+  // 1) Pull only boolean checklist fields
+  const items = Object.entries(propertyRow)
+    .filter(([k,v]) => typeof v === "boolean")
+    .map(([k,v]) => ({
+      key: k,
+      value: v,
+      label: prettyLabel(k)
+    }));
+
+  // 2) Sort: needed (true) first, not needed (false) last
+  items.sort((a,b) => {
+    if (a.value === b.value) return a.label.localeCompare(b.label);
+    return a.value ? -1 : 1; // true comes first
+  });
+
+  const needed = items.filter(x => x.value);
+  const notNeeded = items.filter(x => !x.value);
+
+  // 3) Render section headers + rows
+  if (needed.length) {
+    const h = document.createElement("div");
+    h.className = "sectionTitle";
+    h.textContent = "Needed";
+    reqDiv.appendChild(h);
+
+    needed.forEach(x => {
+      const row = document.createElement("div");
+      row.className = "pillrow";
+      row.innerHTML = `
+        <span class="badge ok">Y</span>
+        <span class="pillrow__text">${x.label}</span>
+      `;
+      reqDiv.appendChild(row);
+    });
+  }
+
+  const h2 = document.createElement("div");
+  h2.className = "sectionTitle";
+  h2.textContent = "Not needed";
+  reqDiv.appendChild(h2);
+
+  notNeeded.forEach(x => {
+    const row = document.createElement("div");
+    row.className = "pillrow pillrow--dim";
+    row.innerHTML = `
+      <span class="badge">—</span>
+      <span class="pillrow__text">${x.label}</span>
+    `;
+    reqDiv.appendChild(row);
+  });
+}
 
     function renderNextActions(tasks, powerStatus) {
       const list = nextActions(tasks, powerStatus);
