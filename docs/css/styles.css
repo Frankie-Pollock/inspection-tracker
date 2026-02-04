@@ -22,3 +22,75 @@ hr{ border:none; border-top:1px solid #223055; margin:14px 0; }
 .badge{ display:inline-block; padding:4px 8px; border:1px solid #2b3d6a; border-radius:999px; color:var(--muted); }
 .badge.ok{ border-color:#2d6a2b; color:#a7e7a3; }
 .badge.blocked{ border-color:#6a2b2b; color:#ffb0b0; }
+
+/* ============================================================
+   MAKE TASKS FULL WIDTH + BETTER SPACING + IMPROVED READABILITY
+   ============================================================ */
+
+/* Turn grid into a 2×2 layout */
+.grid.grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* 2 columns */
+  gap: 24px;                       /* more breathing room */
+  align-items: start;
+}
+
+/* Tasks card spans both columns */
+.span-2 {
+  grid-column: span 2;
+}
+
+/* Card spacing upgrade */
+.card {
+  padding: 24px;
+  border-radius: 16px;
+  margin: 0;
+}
+
+/* Increase spacing for headings */
+h2 {
+  margin-bottom: 16px;
+}
+
+/* Bigger inputs + selects */
+input[type="text"],
+select {
+  padding: 12px 14px;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+/* Checklist spacing */
+.chk {
+  padding: 6px 0;
+  gap: 12px;
+}
+
+/* Table improvements */
+.table th,
+.table td {
+  padding: 14px 12px;
+  font-size: 0.95rem;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,0.03);
+}
+
+.table tbody tr:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* Action column wide enough */
+.table td:last-child {
+  width: 150px;
+}
+
+/* Buttons inside table not squished */
+.table button {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  white-space: normal;
+  line-height: 1.2;
+}
