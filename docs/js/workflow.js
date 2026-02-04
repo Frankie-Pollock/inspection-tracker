@@ -1,14 +1,15 @@
 // /docs/js/workflow.js
 
+
 export const POWER_STATES = {
-  not_checked: "Not checked",
-  on_bgas_check: "Checking BGAS",
-  awaiting_meter_type: "Awaiting meter type",
-  meter_type_given: "Meter type given",
-  e10_supply_taken_over: "E10: supply taken over",
-  e10_needs_taken_over: "E10: needs to be taken over",
-  power_ready: "Power ready"
+  not_checked: "NOT CHECKED",
+  bgas_awaiting_meter_type: "BGAS - AWAITING METER TYPE",
+  bgas_meter_exchange_appointment: "BGAS - METER EXCHANGE APPOINTMENT",
+  e10: "E10",
+  appointment_fault_exchange: "APPOINTMENT FOR FAULT/EXHANGE",
+  power_ready: "POWER READY"
 };
+
 
 export function buildTaskSeed(propertyRow) {
   const r = propertyRow;
@@ -40,7 +41,7 @@ export function buildTaskSeed(propertyRow) {
 }
 
 export function applyRules(tasks, powerStatus) {
-  const powerReady = powerStatus === "power_ready" || powerStatus === "e10_supply_taken_over";
+  const powerReady = powerStatus === "power_ready";
 
   // EPC/EICR should be last: block unless other tasks complete + power ready
   const allOtherComplete = tasks
