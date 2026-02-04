@@ -8,30 +8,88 @@
 </head>
 
 <body>
-<header>
-  <strong>Inspection Tracker</strong>
-  <a href="./index.html">Home</a>
-  <a href="./properties.html">Properties</a>
-  <a href="./create.html">Create</a>
+<header class="topbar">
+  <div class="topbar__brand">Inspection Tracker</div>
+  <nav class="topbar__nav">
+    <a href="./index.html">Home</a>
+    <a href="./properties.html">Properties</a>
+    <a href="./create.html">Create</a>
+  </nav>
 </header>
 
-<main>
-  <div class="card">
+<main class="container">
+  <div class="card card--header">
     <h1 id="title">Property</h1>
     <p class="small" id="meta"></p>
   </div>
 
-  <div class="grid grid-2x2">
+  <!-- 2-column grid for the small cards -->
+  <section class="grid grid-2">
+    <!-- Power / BGAS -->
     <div class="card">
-      <h2>Checklist</h2>
-      <div id="req"></div>
+      <h2>Power / BGAS</h2>
+
+      <label for="p_status">Status</label>
+      <select id="p_status"></select>
+
+      <label for="p_meter">Meter type (optional)</label>
+      <select id="p_meter">
+        <option value="">—</option>
+        <option value="credit">Credit</option>
+        <option value="payg">PAYG</option>
+        <option value="rti_keymeter">RTI KEYMETER</option>
+        <option value="e10">E10</option>
+      </select>
+
+      <div class="chk">
+        <input type="checkbox" id="p_taken" />
+        <label for="p_taken" style="margin:0;">Supply taken over (E10)</label>
+      </div>
+
+      <label for="p_notes">Notes</label>
+      <input id="p_notes" type="text" placeholder="e.g. Awaiting meter type from BGAS (date)">
+
+      <div class="row row--gap">
+        <button class="btn" id="p_save" type="button">Save Power Status</button>
+        <span class="small" id="p_msg"></span>
+      </div>
     </div>
 
+    <!-- Checklist -->
     <div class="card">
-      <h2>Next Actions</h2>
-      <ol id="actions"></ol>
+      <h2>Checklist</h2>
+      <div id="req" class="stack"></div>
     </div>
-  </div>
+
+    <!-- Next actions (full width) -->
+    <div class="card span-2">
+      <h2>Next Actions</h2>
+      <ol id="actions" class="actions"></ol>
+    </div>
+
+    <!-- Tasks (full width) -->
+    <div class="card span-2">
+      <div class="card__head">
+        <h2 style="margin:0;">Tasks</h2>
+        <span class="small" id="t_msg"></span>
+      </div>
+
+      <div class="tablewrap">
+        <table class="table" id="tasks_table">
+          <thead>
+            <tr>
+              <th style="width:44%;">Task</th>
+              <th style="width:14%;">Status</th>
+              <th style="width:12%;">Requires Power</th>
+              <th style="width:18%;">Completed</th>
+              <th style="width:12%;"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
   <script type="module">
     import { supabase } from "./js/supabaseClient.js";
@@ -43,68 +101,22 @@
     const id = new URLSearchParams(location.search).get("id");
 
     const title = document.querySelector("#title");
-    const meta = document.querySelector("#meta");
+    const meta  = document.querySelector("#meta");
     const reqDiv = document.querySelector("#req");
     const actionsOl = document.querySelector("#actions");
-    const grid = document.querySelector(".grid");
 
-    // --- Inject Power / BGAS card (NO account number) ---
-    const powerCard = document.createElement("div");
-    powerCard.className = "card";
-    powerCard.innerHTML = `
-      <h2>Power / BGAS</h2>
+    const pStatusSel = document.querySelector("#p_status");
+    const pMeterSel  = document.querySelector("#p_meter");
+    const pTakenChk  = document.querySelector("#p_taken");
+    const pNotesIn   = document.querySelector("#p_notes");
+    const pSaveBtn   = document.querySelector("#p_save");
+    const pMsg       = document.querySelector("#p_msg");
 
-      <label>Status</label>
-      <select id="p_status"></select>
+    const tMsg       = document.querySelector("#t_msg");
+    const tasksTbody = document.querySelector("#tasks_table tbody");
 
-      <label>Meter Type (optional)</label>
-      <select id="p_meter">
-        <option value="">—</option>
-        <option value="credit">Credit</option>
-        <option value="payg">PAYG</option>
-        <option value="rti_keymeter">RTI KEYMETER</option>
-        <option value="e10">E10</option>
-      </select>
-
-      <div class="chk">
-        <input type="checkbox" id="p_taken" />
-        <label>Supply taken over (E10)</label>
-      </div>
-
-      <label>Notes</label>
-      <input id="p_notes" type="text" placeholder="e.g. Awaiting meter type from BGAS (date)" />
-
-      <hr />
-      <button class="btn" id="p_save">Save Power Status</button>
-      <span class="small" id="p_msg"></span>
-    `;
-
-    // --- Inject Tasks card ---
-    const tasksCard = document.createElement("div");
-    tasksCard.className = "card span-2";
-    tasksCard.innerHTML = `
-      <h2>Tasks</h2>
-      <table class="table" id="tasks_table">
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Status</th>
-            <th>Requires Power</th>
-            <th>Completed</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <p class="small" id="t_msg"></p>
-    `;
-
-    // Put new cards into grid (Power first, Tasks last)
-    grid.prepend(powerCard);
-    grid.appendChild(tasksCard);
-
-    // Fill power status options
-    const pStatusSel = powerCard.querySelector("#p_status");
+    // Fill power status dropdown
+    pStatusSel.innerHTML = "";
     Object.entries(POWER_STATES).forEach(([k, label]) => {
       const opt = document.createElement("option");
       opt.value = k;
@@ -112,25 +124,47 @@
       pStatusSel.appendChild(opt);
     });
 
+    function renderChecklistFlags(propertyRow) {
+      reqDiv.innerHTML = "";
+      for (const [key, value] of Object.entries(propertyRow)) {
+        if (typeof value === "boolean") {
+          const row = document.createElement("div");
+          row.className = "pillrow";
+          row.innerHTML = `
+            <span class="badge ${value ? "ok" : ""}">${value ? "Y" : "—"}</span>
+            <span class="pillrow__text">${key.replaceAll("_"," ")}</span>
+          `;
+          reqDiv.appendChild(row);
+        }
+      }
+    }
+
+    function renderNextActions(tasks, powerStatus) {
+      const list = nextActions(tasks, powerStatus);
+      actionsOl.innerHTML = "";
+      list.forEach(line => {
+        const li = document.createElement("li");
+        li.textContent = line;
+        actionsOl.appendChild(li);
+      });
+    }
+
     async function ensurePowerRow(propertyRow) {
-      // Try to load power_status
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("power_status")
         .select("*")
         .eq("property_id", propertyRow.id)
         .maybeSingle();
 
-      // If row exists, return it
       if (data) return data;
 
-      // If not exists, create default row
-      const { data: created, error: insErr } = await supabase
+      const { data: created, error } = await supabase
         .from("power_status")
         .insert({ property_id: propertyRow.id, status: propertyRow.power_status })
         .select("*")
         .single();
 
-      if (insErr) throw insErr;
+      if (error) throw error;
       return created;
     }
 
@@ -142,11 +176,9 @@
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-
-      // If tasks already exist, return them
       if (tasks && tasks.length) return tasks;
 
-      // Otherwise seed tasks from checklist flags
+      // Seed tasks if empty
       const seeds = buildTaskSeed(propertyRow).map(t => ({
         property_id: propertyRow.id,
         key: t.key,
@@ -159,7 +191,6 @@
         if (insErr) throw insErr;
       }
 
-      // Reload tasks after seeding
       const { data: tasks2, error: err2 } = await supabase
         .from("tasks")
         .select("*")
@@ -170,61 +201,38 @@
       return tasks2 || [];
     }
 
-    function renderChecklistFlags(propertyRow) {
-      reqDiv.innerHTML = "";
-      for (const [key, value] of Object.entries(propertyRow)) {
-        if (typeof value === "boolean") {
-          const div = document.createElement("div");
-          div.className = "chk";
-          div.innerHTML = `<span class="badge ${value ? "ok" : ""}">${value ? "Y" : "—"}</span> ${key.replaceAll("_"," ")}`;
-          reqDiv.appendChild(div);
-        }
-      }
-    }
-
-    function renderNextActions(tasks, powerStatus) {
-      const actions = nextActions(tasks, powerStatus);
-      actionsOl.innerHTML = "";
-      actions.forEach(a => {
-        const li = document.createElement("li");
-        li.textContent = a;
-        actionsOl.appendChild(li);
-      });
+    function statusBadgeHtml(status) {
+      if (status === "complete") return `<span class="badge ok">complete</span>`;
+      if (status === "blocked") return `<span class="badge blocked">blocked</span>`;
+      if (status === "in_progress") return `<span class="badge warn">in progress</span>`;
+      return `<span class="badge">${status}</span>`;
     }
 
     async function renderTasks(tasks) {
-      const tbody = tasksCard.querySelector("#tasks_table tbody");
-      tbody.innerHTML = "";
+      tasksTbody.innerHTML = "";
 
       tasks.forEach(t => {
         const tr = document.createElement("tr");
 
-        const statusBadge =
-          t.status === "complete"
-            ? `<span class="badge ok">complete</span>`
-            : t.status === "blocked"
-              ? `<span class="badge blocked">blocked</span>`
-              : `<span class="badge">${t.status}</span>`;
-
         tr.innerHTML = `
           <td>
-            <strong>${t.name}</strong>
-            ${t.blocked_reason ? `<div class="small">${t.blocked_reason}</div>` : ""}
+            <div class="taskname">${t.name}</div>
+            ${t.blocked_reason ? `<div class="small muted">${t.blocked_reason}</div>` : ""}
           </td>
-          <td>${statusBadge}</td>
+          <td>${statusBadgeHtml(t.status)}</td>
           <td>${t.requires_power ? "Yes" : "No"}</td>
           <td>${t.completed_at ? new Date(t.completed_at).toLocaleString() : ""}</td>
-          <td>
-            <button class="btn" data-action="toggle" data-id="${t.id}">
+          <td class="td-actions">
+            <button class="btn btn--tiny" data-action="toggle" data-id="${t.id}">
               ${t.status === "complete" ? "Mark not complete" : "Mark complete"}
             </button>
           </td>
         `;
-        tbody.appendChild(tr);
+
+        tasksTbody.appendChild(tr);
       });
 
-      // Toggle completion
-      tbody.querySelectorAll('button[data-action="toggle"]').forEach(btn => {
+      tasksTbody.querySelectorAll('button[data-action="toggle"]').forEach(btn => {
         btn.addEventListener("click", async () => {
           const taskId = btn.getAttribute("data-id");
           const task = tasks.find(x => x.id === taskId);
@@ -248,7 +256,10 @@
     }
 
     async function loadAll() {
-      // 1) Load the property
+      tMsg.textContent = "";
+      pMsg.textContent = "";
+
+      // 1) Load property
       const { data: prop, error: propErr } = await supabase
         .from("properties")
         .select("*")
@@ -266,70 +277,65 @@
 
       renderChecklistFlags(prop);
 
-      // 2) Ensure power_status row exists
+      // 2) Load/create power_status
       const power = await ensurePowerRow(prop);
 
-      // Fill power UI
-      powerCard.querySelector("#p_status").value = power.status || "not_checked";
-      powerCard.querySelector("#p_meter").value = power.meter_type || "";
-      powerCard.querySelector("#p_taken").checked = !!power.supply_taken_over;
-      powerCard.querySelector("#p_notes").value = power.notes || "";
+      pStatusSel.value = power.status || "not_checked";
+      pMeterSel.value  = power.meter_type || "";
+      pTakenChk.checked = !!power.supply_taken_over;
+      pNotesIn.value   = power.notes || "";
 
-      // 3) Ensure tasks exist
+      // 3) Load/create tasks
       let tasks = await ensureTasks(prop);
 
-      // 4) Apply gating rules locally, then persist changes (blocked/unblocked reasons)
+      // 4) Apply rules + persist (keeps DB consistent)
       tasks = applyRules(tasks, power.status);
 
-      // Persist status/blocked_reason for non-complete tasks (keeps DB consistent)
+      // Only persist non-complete tasks to keep it light
       for (const t of tasks) {
         if (t.status === "complete") continue;
-        await supabase
-          .from("tasks")
+        await supabase.from("tasks")
           .update({ status: t.status, blocked_reason: t.blocked_reason })
           .eq("id", t.id);
       }
 
-      // Reload tasks after applying rule updates
-      const { data: tasksFinal, error: tErr } = await supabase
+      // Reload final tasks
+      const { data: tasksFinal, error: tasksErr } = await supabase
         .from("tasks")
         .select("*")
         .eq("property_id", prop.id)
         .order("created_at", { ascending: true });
 
-      if (tErr) throw tErr;
+      if (tasksErr) { tMsg.textContent = tasksErr.message; throw tasksErr; }
 
       await renderTasks(tasksFinal || []);
       renderNextActions(tasksFinal || [], power.status);
     }
 
-    // Save power status
-    powerCard.querySelector("#p_save").addEventListener("click", async () => {
-      const p_msg = powerCard.querySelector("#p_msg");
-      p_msg.textContent = "";
+    pSaveBtn.addEventListener("click", async () => {
+      pMsg.textContent = "";
 
-      const status = powerCard.querySelector("#p_status").value;
-      const meter_type = powerCard.querySelector("#p_meter").value || null;
-      const supply_taken_over = powerCard.querySelector("#p_taken").checked;
-      const notes = powerCard.querySelector("#p_notes").value.trim() || null;
+      const status = pStatusSel.value;
+      const meter_type = pMeterSel.value || null;
+      const supply_taken_over = pTakenChk.checked;
+      const notes = pNotesIn.value.trim() || null;
 
-      // Update power_status (no account number)
       const { error: pErr } = await supabase
         .from("power_status")
         .update({ status, meter_type, supply_taken_over, notes })
         .eq("property_id", id);
 
-      if (pErr) { p_msg.textContent = pErr.message; return; }
+      if (pErr) { pMsg.textContent = pErr.message; return; }
 
-      // Mirror for list views
+      // Mirror for list view
       const { error: propErr } = await supabase
         .from("properties")
         .update({ power_status: status })
         .eq("id", id);
 
-      if (propErr) { p_msg.textContent = propErr.message; return; }
+      if (propErr) { pMsg.textContent = propErr.message; return; }
 
-      p_msg.textContent = "Saved.";
+      pMsg.textContent = "Saved.";
       await loadAll();
     });
 
@@ -338,3 +344,4 @@
 </main>
 </body>
 </html>
+``
