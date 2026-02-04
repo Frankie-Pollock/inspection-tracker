@@ -3,40 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inspection Tracker</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <title>Login</title>
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
-<script type="module">
-  import { requireAuth } from "./js/authGate.js";
-  await requireAuth();
-</script>
+
 <body>
 <header>
   <strong>Inspection Tracker</strong>
-  <a href="./index.html">Home</a>
-  <a href="./properties.html">Properties</a>
-  <a href="./create.html">Create</a>
+  <a href="./login.html">Login</a>
 </header>
 
 <main>
   <div class="card">
-    <h1>Welcome</h1>
-    <p class="small">This is the shell site on GitHub Pages. Next we’ll connect it to Supabase.</p>
+    <h1>Login</h1>
+    <p class="small">Use your work email + shared password.</p>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>View Properties</h2>
-      <p class="small">See inspection checklist results, statuses and completion dates.</p>
-      <a class="btn" href="./properties.html">Open Properties</a>
-    </div>
+  <form class="card" id="loginForm">
+    <label>Email</label>
+    <input id="email" type="text" required>
 
-    <div class="card">
-      <h2>Create Property</h2>
-      <p class="small">Add an address and tick what’s required (upload later).</p>
-      <a class="btn" href="./create.html">Create New</a>
-    </div>
-  </div>
+    <label>Password</label>
+    <input id="password" type="password" required>
+
+    <hr />
+    <button class="btn" type="submit">Sign In</button>
+    <span id="msg" class="small"></span>
+  </form>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+
+    document.querySelector("#loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.querySelector("#email").value.trim();
+      const password = document.querySelector("#password").value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        document.querySelector("#msg").textContent = error.message;
+        return;
+      }
+
+      window.location.href = "./index.html";
+    });
+  </script>
 </main>
 </body>
 </html>
