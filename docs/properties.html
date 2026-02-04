@@ -1,1 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Properties</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+<header>
+  <strong>Inspection Tracker</strong>
+  <a href="./index.html">Home</a>
+  <a href="./properties.html">Properties</a>
+  <a href="./create.html">Create</a>
+</header>
 
+<main>
+  <div class="card">
+    <h1>Properties</h1>
+    <p class="small">Temporary local list (per browser). Next we’ll load/save from Supabase.</p>
+  </div>
+
+  <div class="card">
+    <table class="table" id="table">
+      <thead>
+        <tr><th>Address</th><th>Power</th><th>Created</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p class="small" id="empty"></p>
+  </div>
+
+  <script type="module">
+    import { loadProperties } from "./js/app.js";
+
+    const list = loadProperties();
+    const tbody = document.querySelector("#table tbody");
+    const empty = document.querySelector("#empty");
+
+    if (!list.length) {
+      empty.textContent = "No properties yet. Click Create to add one.";
+    } else {
+      list.slice().reverse().forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.address}</td>
+          <td><span class="badge ${p.powerStatus === "power_ready" ? "ok" : "blocked"}">${p.powerStatus}</span></td>
+          <td>${new Date(p.createdAt).toLocaleString()}</td>
+          <td><a class="btn" href="./property.html?id=${encodeURIComponent(p.id)}">Open</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</main>
+</body>
+</html>
