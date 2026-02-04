@@ -21,7 +21,7 @@
     <p class="small" id="meta"></p>
   </div>
 
-  <div class="grid">
+  <div class="grid grid-2x2">
     <div class="card">
       <h2>Checklist</h2>
       <div id="req"></div>
@@ -81,7 +81,7 @@
 
     // --- Inject Tasks card ---
     const tasksCard = document.createElement("div");
-    tasksCard.className = "card";
+    tasksCard.className = "card span-2";
     tasksCard.innerHTML = `
       <h2>Tasks</h2>
       <table class="table" id="tasks_table">
