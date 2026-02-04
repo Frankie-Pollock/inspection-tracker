@@ -4,21 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Property</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
+
 <body>
-  <script type="module">
-  import { requireAuth } from "./js/authGate.js";
-  await requireAuth();
-  </script>
 <header>
   <strong>Inspection Tracker</strong>
   <a href="./index.html">Home</a>
-  <a href="./properties.html">Properties</a>
-  <a href="./create.html">Create</a>
+ e.htmlCreate</a>
 </header>
 
 <main>
+  <script type="module">
+    import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
+  </script>
+
   <div class="card">
     <h1 id="title">Property</h1>
     <p class="small" id="meta"></p>
@@ -26,50 +27,60 @@
 
   <div class="grid">
     <div class="card">
-      <h2>Requirements</h2>
+      <h2>Checklist</h2>
       <div id="req"></div>
     </div>
 
     <div class="card">
-      <h2>Next Actions (placeholder)</h2>
+      <h2>Next Actions</h2>
       <ol id="actions"></ol>
     </div>
   </div>
 
   <script type="module">
-import { supabase } from "./js/supabaseClient.js";
-import { requireAuth } from "./js/authGate.js";
+    import { supabase } from "./js/supabaseClient.js";
+    import { requireAuth } from "./js/authGate.js";
+    import { computeNextActions } from "./js/app.js";
 
-await requireAuth();
+    await requireAuth();
 
-const id = new URLSearchParams(location.search).get("id");
+    const id = new URLSearchParams(location.search).get("id");
 
-const { data, error } = await supabase
-  .from("properties")
-  .select("*")
-  .eq("id", id)
-  .single();
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-if (error) {
-  alert(error.message);
-  throw error;
-}
+    if (error) {
+      document.querySelector("#title").textContent = "Not found";
+      document.querySelector("#meta").textContent = error.message;
+      throw error;
+    }
 
-// use `data` to render requirements/actions
+    const p = data;
 
     document.querySelector("#title").textContent = p.address;
-    document.querySelector("#meta").textContent = `Power: ${p.powerStatus} • Created: ${new Date(p.createdAt).toLocaleString()} • ID: ${p.id}`;
+    document.querySelector("#meta").textContent =
+      `Power: ${p.power_status} • Created: ${new Date(p.created_at).toLocaleString()}`;
 
+    // Render checklist
     const reqDiv = document.querySelector("#req");
-    const req = p.requirements;
-    Object.keys(req).forEach(k => {
-      const row = document.createElement("div");
-      row.className = "chk";
-      row.innerHTML = `<span class="badge ${req[k] ? "ok" : ""}">${req[k] ? "Y" : "—"}</span> <span>${k.replaceAll("_"," ")}</span>`;
-      reqDiv.appendChild(row);
+    for (const [key, value] of Object.entries(p)) {
+      if (typeof value === "boolean") {
+        const div = document.createElement("div");
+        div.className = "chk";
+        div.innerHTML = `<span class="badge">${value ? "Yes" : "No"}</span> ${key}`;
+        reqDiv.appendChild(div);
+      }
+    }
+
+    // Render next actions (placeholder logic for now)
+    const actions = computeNextActions({
+      powerStatus: p.power_status,
+      requirements: p
     });
 
-    const actions = computeNextActions(p);
     const ol = document.querySelector("#actions");
     actions.forEach(a => {
       const li = document.createElement("li");
