@@ -63,6 +63,9 @@
   </form>
 
   <script type="module">
+    import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
+    
     import { addProperty, makeId } from "./js/app.js";
 
     const form = document.querySelector("#form");
