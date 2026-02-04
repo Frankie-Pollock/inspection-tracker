@@ -1,20 +1,17 @@
 :root{
   --bg: #0b1220;
-  --panel: #0f1930;
   --card: #111a2e;
   --stroke: #223055;
   --stroke2: #2b3d6a;
 
   --text: #e6ecff;
   --muted: #9fb0d0;
-
   --accent: #5aa7ff;
+
   --ok: #2d6a2b;
   --okText: #a7e7a3;
-
   --warn: #6a5b2b;
   --warnText: #ffd88a;
-
   --bad: #6a2b2b;
   --badText: #ffb0b0;
 
@@ -31,7 +28,8 @@ body{
               radial-gradient(900px 500px at 90% 0%, rgba(90,167,255,.08), transparent 55%),
               var(--bg);
   color: var(--text);
-  line-height: 1.45;
+  line-height: 1.5;
+  overflow-x: hidden; /* stop any accidental side-scroll */
 }
 
 a{ color: var(--muted); text-decoration:none; }
@@ -56,16 +54,8 @@ a:hover{ color: var(--text); }
   justify-content: space-between;
   padding: 16px 22px;
 }
-
-.topbar__brand{
-  font-weight: 800;
-  letter-spacing: .2px;
-}
-
-.topbar__nav{
-  display:flex;
-  gap: 14px;
-}
+.topbar__brand{ font-weight: 800; }
+.topbar__nav{ display:flex; gap: 14px; }
 
 /* Cards */
 .card{
@@ -75,71 +65,62 @@ a:hover{ color: var(--text); }
   padding: 22px;
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
-
 .card--header{
   padding: 18px 22px;
   margin-bottom: var(--gap);
 }
-
 .card__head{
   display:flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-/* Typography */
-h1{
-  margin: 0 0 6px;
-  font-size: 1.35rem;
-}
-h2{
-  margin: 0 0 14px;
-  font-size: 1.05rem;
-}
-.small{
-  color: var(--muted);
-  font-size: .92rem;
-}
+h1{ margin:0 0 6px; font-size: 1.35rem; }
+h2{ margin:0 0 14px; font-size: 1.05rem; }
+.small{ color: var(--muted); font-size: .92rem; }
 .muted{ color: var(--muted); }
 
-/* Layout grid */
+/* Layout */
 .grid{
   display:grid;
   gap: var(--gap);
   align-items: start;
 }
 
-.grid-2{
-  grid-template-columns: 1fr 1fr;
+/* 3 columns top row */
+.grid-3{
+  grid-template-columns: 1fr 1fr 1.25fr; /* Next Actions slightly wider */
 }
 
-.span-2{
-  grid-column: span 2;
+/* Tasks spans full width */
+.span-all{
+  grid-column: 1 / -1;
 }
 
-@media (max-width: 900px){
-  .grid-2{ grid-template-columns: 1fr; }
-  .span-2{ grid-column: span 1; }
+@media (max-width: 980px){
+  .grid-3{ grid-template-columns: 1fr; }
   .container{ padding: 16px; }
-  .card{ padding: 16px; }
+  .card{ padding: 18px; }
 }
 
-/* Form controls */
+/* Controls */
 label{
   display:block;
-  margin: 12px 0 8px;
+  margin: 14px 0 8px;
   font-weight: 650;
   color: var(--muted);
 }
 
 input[type="text"],
 input[type="password"],
-select{
+select,
+textarea{
   width: 100%;
+  max-width: 100%;
   min-height: 44px;
-  padding: 11px 12px;
+  padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid var(--stroke2);
   background: #0e1730;
@@ -147,7 +128,12 @@ select{
   outline: none;
 }
 
-input:focus, select:focus{
+textarea{
+  min-height: 84px;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus{
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(90,167,255,.14);
 }
@@ -156,7 +142,12 @@ input:focus, select:focus{
   display:flex;
   align-items:center;
   gap: 12px;
-  margin: 12px 0 0;
+  margin-top: 14px;
+}
+.chk__label{
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
 }
 
 /* Buttons */
@@ -164,44 +155,50 @@ input:focus, select:focus{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap: 8px;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: 12px;
   border: 1px solid var(--stroke2);
   background: #162447;
   color: var(--text);
-  font-weight: 700;
+  font-weight: 750;
   cursor: pointer;
+  max-width: 100%;
 }
 .btn:hover{
   border-color: var(--accent);
   transform: translateY(-1px);
   transition: transform 120ms ease;
 }
-.btn:active{ transform: translateY(0); }
-
 .btn--tiny{
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: 10px;
-  font-weight: 700;
+  font-weight: 750;
   font-size: .86rem;
+  white-space: normal; /* allow wrap */
+  line-height: 1.15;
 }
 
-/* Pills / checklist rows */
-.stack{ display:flex; flex-direction:column; gap: 10px; }
+/* Helper row spacing */
+.row{ display:flex; align-items:center; flex-wrap: wrap; }
+.row--gap{ gap: 12px; margin-top: 16px; }
 
+/* Checklist spacing */
+.stack{
+  display:flex;
+  flex-direction:column;
+  gap: 12px; /* more breathing room */
+}
 .pillrow{
   display:flex;
   align-items:center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid rgba(43,61,106,.7);
   border-radius: 12px;
   background: rgba(14,23,48,.55);
 }
 .pillrow__text{
   color: var(--text);
-  text-transform: none;
 }
 
 /* Badges */
@@ -209,7 +206,7 @@ input:focus, select:focus{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding: 4px 10px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid var(--stroke2);
   color: var(--muted);
@@ -237,22 +234,22 @@ input:focus, select:focus{
   margin: 0;
   padding-left: 18px;
 }
-.actions li{
-  margin: 8px 0;
-}
+.actions li{ margin: 10px 0; }
 
-/* Table */
+/* Tasks table wrapper: scroll INSIDE card, not page */
 .tablewrap{
-  overflow:auto;
+  width: 100%;
+  overflow-x: auto;
   border-radius: 14px;
   border: 1px solid var(--stroke);
   background: rgba(14,23,48,.45);
 }
 
+/* IMPORTANT: remove any forced min-width that causes page overflow */
 .table{
-  width:100%;
+  width: 100%;
   border-collapse: collapse;
-  min-width: 720px; /* allows horizontal scroll on small screens */
+  table-layout: auto;
 }
 
 .table thead th{
@@ -260,13 +257,11 @@ input:focus, select:focus{
   font-size: .86rem;
   color: var(--muted);
   font-weight: 800;
-  letter-spacing: .2px;
   padding: 12px 12px;
   border-bottom: 1px solid var(--stroke);
   background: rgba(17,26,46,.85);
   position: sticky;
   top: 0;
-  z-index: 1;
 }
 
 .table tbody td{
@@ -285,20 +280,7 @@ input:focus, select:focus{
 
 .td-actions{
   text-align:right;
+  white-space: nowrap;
 }
 
-.taskname{
-  font-weight: 800;
-  margin-bottom: 2px;
-}
-
-/* Little layout helpers */
-.row{
-  display:flex;
-  align-items:center;
-}
-.row--gap{
-  gap: 12px;
-  margin-top: 14px;
-}
-``
+.taskname{ font-weight: 800; margin-bottom: 4px; }
