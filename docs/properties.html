@@ -35,26 +35,22 @@
   </div>
 
   <script type="module">
-    import { loadProperties } from "./js/app.js";
+import { supabase } from "./js/supabaseClient.js";
+import { requireAuth } from "./js/authGate.js";
 
-    const list = loadProperties();
-    const tbody = document.querySelector("#table tbody");
-    const empty = document.querySelector("#empty");
+await requireAuth();
 
-    if (!list.length) {
-      empty.textContent = "No properties yet. Click Create to add one.";
-    } else {
-      list.slice().reverse().forEach(p => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${p.address}</td>
-          <td><span class="badge ${p.powerStatus === "power_ready" ? "ok" : "blocked"}">${p.powerStatus}</span></td>
-          <td>${new Date(p.createdAt).toLocaleString()}</td>
-          <td><a class="btn" href="./property.html?id=${encodeURIComponent(p.id)}">Open</a></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+const { data, error } = await supabase
+  .from("properties")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+if (error) {
+  alert(error.message);
+  throw error;
+}
+
+// render `data` into your table instead of localStorage
   </script>
 </main>
 </body>
