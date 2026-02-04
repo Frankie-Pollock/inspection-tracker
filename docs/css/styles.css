@@ -1,6 +1,7 @@
 :root{
   --bg: #0b1220;
   --card: #111a2e;
+
   --stroke: #223055;
   --stroke2: #2b3d6a;
 
@@ -10,8 +11,10 @@
 
   --ok: #2d6a2b;
   --okText: #a7e7a3;
+
   --warn: #6a5b2b;
   --warnText: #ffd88a;
+
   --bad: #6a2b2b;
   --badText: #ffb0b0;
 
@@ -19,17 +22,20 @@
   --gap: 22px;
 }
 
+/* Base */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 600px at 20% -10%, rgba(90,167,255,.15), transparent 50%),
-              radial-gradient(900px 500px at 90% 0%, rgba(90,167,255,.08), transparent 55%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(90,167,255,.15), transparent 50%),
+    radial-gradient(900px 500px at 90% 0%, rgba(90,167,255,.08), transparent 55%),
+    var(--bg);
   color: var(--text);
   line-height: 1.5;
-  overflow-x: hidden; /* stop any accidental side-scroll */
+  overflow-x: hidden;
 }
 
 a{ color: var(--muted); text-decoration:none; }
@@ -54,21 +60,26 @@ a:hover{ color: var(--text); }
   justify-content: space-between;
   padding: 16px 22px;
 }
+
 .topbar__brand{ font-weight: 800; }
 .topbar__nav{ display:flex; gap: 14px; }
 
 /* Cards */
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    var(--card);
   border: 1px solid var(--stroke);
   border-radius: var(--radius);
   padding: 22px;
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
+
 .card--header{
   padding: 18px 22px;
   margin-bottom: var(--gap);
 }
+
 .card__head{
   display:flex;
   align-items: center;
@@ -77,8 +88,10 @@ a:hover{ color: var(--text); }
   margin-bottom: 12px;
 }
 
+/* Typography */
 h1{ margin:0 0 6px; font-size: 1.35rem; }
 h2{ margin:0 0 14px; font-size: 1.05rem; }
+
 .small{ color: var(--muted); font-size: .92rem; }
 .muted{ color: var(--muted); }
 
@@ -86,15 +99,13 @@ h2{ margin:0 0 14px; font-size: 1.05rem; }
 .grid{
   display:grid;
   gap: var(--gap);
-  align-items: start;
+  align-items: start; /* IMPORTANT: prevents tallest-card forcing */
 }
 
-/* 3 columns top row */
 .grid-3{
-  grid-template-columns: 1fr 1fr 1.25fr; /* Next Actions slightly wider */
+  grid-template-columns: 1fr 1fr 1.25fr; /* Next actions slightly wider */
 }
 
-/* Tasks spans full width */
 .span-all{
   grid-column: 1 / -1;
 }
@@ -144,6 +155,7 @@ input:focus, select:focus, textarea:focus{
   gap: 12px;
   margin-top: 14px;
 }
+
 .chk__label{
   margin: 0;
   font-weight: 600;
@@ -164,17 +176,19 @@ input:focus, select:focus, textarea:focus{
   cursor: pointer;
   max-width: 100%;
 }
+
 .btn:hover{
   border-color: var(--accent);
   transform: translateY(-1px);
   transition: transform 120ms ease;
 }
+
 .btn--tiny{
   padding: 9px 10px;
   border-radius: 10px;
   font-weight: 750;
   font-size: .86rem;
-  white-space: normal; /* allow wrap */
+  white-space: normal;
   line-height: 1.15;
 }
 
@@ -182,12 +196,13 @@ input:focus, select:focus, textarea:focus{
 .row{ display:flex; align-items:center; flex-wrap: wrap; }
 .row--gap{ gap: 12px; margin-top: 16px; }
 
-/* Checklist spacing */
+/* Checklist items */
 .stack{
   display:flex;
   flex-direction:column;
-  gap: 12px; /* more breathing room */
+  gap: 12px;
 }
+
 .pillrow{
   display:flex;
   align-items:center;
@@ -197,8 +212,20 @@ input:focus, select:focus, textarea:focus{
   border-radius: 12px;
   background: rgba(14,23,48,.55);
 }
-.pillrow__text{
-  color: var(--text);
+
+.pillrow__text{ color: var(--text); }
+
+.sectionTitle{
+  margin: 6px 0 2px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .75rem;
+}
+
+.pillrow--dim{
+  opacity: 0.82;
 }
 
 /* Badges */
@@ -213,39 +240,41 @@ input:focus, select:focus, textarea:focus{
   font-size: .84rem;
   min-width: 34px;
 }
+
 .badge.ok{
   border-color: var(--ok);
   color: var(--okText);
   background: rgba(45,106,43,.12);
 }
+
 .badge.warn{
   border-color: var(--warn);
   color: var(--warnText);
   background: rgba(106,91,43,.12);
 }
+
 .badge.blocked{
   border-color: var(--bad);
   color: var(--badText);
   background: rgba(106,43,43,.12);
 }
 
-/* Actions list */
+/* Next actions list */
 .actions{
   margin: 0;
   padding-left: 18px;
 }
 .actions li{ margin: 10px 0; }
 
-/* Tasks table wrapper: scroll INSIDE card, not page */
+/* Tasks table wrapper */
 .tablewrap{
   width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; /* scroll inside card, not the page */
   border-radius: 14px;
   border: 1px solid var(--stroke);
   background: rgba(14,23,48,.45);
 }
 
-/* IMPORTANT: remove any forced min-width that causes page overflow */
 .table{
   width: 100%;
   border-collapse: collapse;
@@ -283,41 +312,27 @@ input:focus, select:focus, textarea:focus{
   white-space: nowrap;
 }
 
-.taskname{ font-weight: 800; margin-bottom: 4px; }
-
-/* Make all cards in the grid row match height */
-.grid {
-  align-items: stretch; /* IMPORTANT: cards become equal height in a row */
+.taskname{
+  font-weight: 800;
+  margin-bottom: 4px;
 }
 
-/* Ensure cards behave nicely as vertical layouts */
-.card {
-  display: flex;
-  flex-direction: column;
+/* Scrollable cards used by JS height-sync approach */
+.card--scroll{
+  overflow: hidden;
 }
 
-/* Checklist container: scroll within the card if content is taller */
-#req.stack {
-  flex: 1;              /* take remaining height */
-  overflow: auto;       /* scroll if too tall */
-  padding-right: 6px;   /* space for scrollbar */
+.card--scroll .scrollbody{
+  overflow: auto;
+  padding-right: 6px;
 }
 
-/* Optional: nicer scrollbar (works in Chromium/Edge) */
-#req.stack::-webkit-scrollbar { width: 10px; }
-#req.stack::-webkit-scrollbar-thumb {
+/* Optional scrollbar style */
+.card--scroll .scrollbody::-webkit-scrollbar{ width: 10px; }
+.card--scroll .scrollbody::-webkit-scrollbar-thumb{
   background: rgba(159,176,208,.25);
   border-radius: 999px;
 }
-#req.stack::-webkit-scrollbar-thumb:hover {
+.card--scroll .scrollbody::-webkit-scrollbar-thumb:hover{
   background: rgba(159,176,208,.35);
 }
-
-/* Top row should NOT stretch cards */
-.grid-3{
-  align-items: start;
-}
-
-/* We'll constrain checklist/actions using JS, so their content must scroll nicely */
-.card--scroll{
- 
