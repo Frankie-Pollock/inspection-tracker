@@ -4,12 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Properties</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
-  <script type="module">
-  import { requireAuth } from "./js/authGate.js";
-  await requireAuth();
-  </script>
+
 <body>
 <header>
   <strong>Inspection Tracker</strong>
@@ -19,15 +16,25 @@
 </header>
 
 <main>
+  <script type="module">
+    import { requireAuth } from "./js/authGate.js";
+    await requireAuth();
+  </script>
+
   <div class="card">
     <h1>Properties</h1>
-    <p class="small">Temporary local list (per browser). Next we’ll load/save from Supabase.</p>
+    <p class="small">All shared inspection records.</p>
   </div>
 
   <div class="card">
     <table class="table" id="table">
       <thead>
-        <tr><th>Address</th><th>Power</th><th>Created</th><th></th></tr>
+        <tr>
+          <th>Address</th>
+          <th>Power</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -35,22 +42,40 @@
   </div>
 
   <script type="module">
-import { supabase } from "./js/supabaseClient.js";
-import { requireAuth } from "./js/authGate.js";
+    import { supabase } from "./js/supabaseClient.js";
+    import { requireAuth } from "./js/authGate.js";
 
-await requireAuth();
+    await requireAuth();
 
-const { data, error } = await supabase
-  .from("properties")
-  .select("*")
-  .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-if (error) {
-  alert(error.message);
-  throw error;
-}
+    const tbody = document.querySelector("#table tbody");
+    const empty = document.querySelector("#empty");
 
-// render `data` into your table instead of localStorage
+    if (error) {
+      empty.textContent = error.message;
+      throw error;
+    }
+
+    if (!data.length) {
+      empty.textContent = "No properties found.";
+    } else {
+      data.forEach(p => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${p.address}</td>
+          <td><span class="badge">${p.power_status}</span></td>
+          <td>${new Date(p.created_at).toLocaleString()}</td>
+          <td><a class="btn" href="./property.html?id=${p.id}">Open</a></td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
   </script>
 </main>
 </body>
