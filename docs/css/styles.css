@@ -312,3 +312,12 @@ input:focus, select:focus, textarea:focus{
 #req.stack::-webkit-scrollbar-thumb:hover {
   background: rgba(159,176,208,.35);
 }
+
+/* Top row should NOT stretch cards */
+.grid-3{
+  align-items: start;
+}
+
+/* We'll constrain checklist/actions using JS, so their content must scroll nicely */
+.card--scroll{
+ 
